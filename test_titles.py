@@ -181,7 +181,7 @@ def get_other_title(url):
             # Try meta title
             meta_title = soup.find('meta', property='og:title')
             if meta_title and meta_title.get('content'):
-                title = meta_title.get('content').strip()
+                title = meta_title.get('content').strip().replace("\n", " ")
                 if "Mac App Store" in title:
                     return title
                 elif "?mt=12" in url:
@@ -332,4 +332,4 @@ for url in test_urls:
         title = get_other_title(url)
         print(f"\nURL: {url}")
         print(f"Title: {title}")
-        time.sleep(random.uniform(1.0, 2.0))     
+        time.sleep(random.uniform(1.0, 2.0))       
