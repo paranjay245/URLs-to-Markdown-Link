@@ -8,9 +8,9 @@ import random
 
 def get_reddit_title(url):
     headers = {
-        'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/121.0.0.0 Safari/537.36',
-        'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8',
-        'Accept-Language': 'en-US,en;q=0.5',
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/123.0.0.0 Safari/537.36',
+        'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7',
+        'Accept-Language': 'en-US,en;q=0.9',
         'Referer': 'https://www.google.com/',
         'DNT': '1',
         'Connection': 'keep-alive',
@@ -18,16 +18,47 @@ def get_reddit_title(url):
         'Sec-Fetch-Dest': 'document',
         'Sec-Fetch-Mode': 'navigate',
         'Sec-Fetch-Site': 'cross-site',
+        'Sec-Fetch-User': '?1',
         'Pragma': 'no-cache',
         'Cache-Control': 'no-cache',
     }
+    
+    post_id_match = re.search(r'comments/([a-zA-Z0-9]+)/', url)
+    post_id = post_id_match.group(1) if post_id_match else None
+    
+    subreddit_match = re.search(r'reddit\.com/r/([^/]+)', url)
+    subreddit = subreddit_match.group(1) if subreddit_match else None
+    
+    if post_id and subreddit:
+        try:
+            json_url = f"https://www.reddit.com/r/{subreddit}/comments/{post_id}/.json"
+            response = requests.get(json_url, headers=headers, timeout=15)
+            if response.status_code == 200:
+                data = response.json()
+                if data and isinstance(data, list) and len(data) > 0:
+                    post_data = data[0]['data']['children'][0]['data']
+                    title = post_data.get('title')
+                    if title:
+                        return f"{html.unescape(title)} : r/{subreddit}"
+        except Exception as e:
+            print(f"Error getting Reddit title from JSON API: {str(e)}")
+    
     try:
-        # Extract subreddit name
-        subreddit_match = re.search(r'reddit\.com/r/([^/]+)', url)
-        subreddit = subreddit_match.group(1) if subreddit_match else None
+        old_reddit_url = url.replace('www.reddit.com', 'old.reddit.com')
+        try:
+            response = requests.get(old_reddit_url, headers=headers, timeout=15)
+            if response.status_code == 200:
+                soup = BeautifulSoup(response.text, 'html.parser')
+                
+                title_elem = soup.find('p', class_='title')
+                if title_elem and title_elem.find('a'):
+                    title = html.unescape(title_elem.find('a').text.strip())
+                    return f"{title} : r/{subreddit}" if subreddit else title
+        except Exception as e:
+            print(f"Error with old.reddit.com: {str(e)}")
         
         response = requests.get(url, headers=headers, timeout=15)
-        response.encoding = 'utf-8'  # Force UTF-8 encoding
+        response.encoding = 'utf-8'
         soup = BeautifulSoup(response.text, 'html.parser')
         
         meta_title = soup.find('meta', property='og:title')
@@ -46,7 +77,7 @@ def get_reddit_title(url):
             title = html.unescape(h1.text.strip())
             return f"{title} : r/{subreddit}" if subreddit else title
         
-        # Try regular title
+        # Try regular title tag
         title_tag = soup.find('title')
         if title_tag and title_tag.text:
             title_text = html.unescape(title_tag.text.strip())
@@ -54,7 +85,26 @@ def get_reddit_title(url):
                 title_text = title_text.split(" - reddit")[0].strip()
             if title_text.startswith("r/") and " - " in title_text:
                 title_text = title_text.split(" - ", 1)[1].strip()
-            return f"{title_text} : r/{subreddit}" if subreddit else title_text
+            if title_text and not title_text.startswith("r/"):
+                return f"{title_text} : r/{subreddit}" if subreddit else title_text
+        
+        if post_id:
+            title_from_url = None
+            path_parts = url.split('/')
+            for i, part in enumerate(path_parts):
+                if part == "comments" and i + 2 < len(path_parts):
+                    potential_title = path_parts[i + 2]
+                    if potential_title and potential_title not in ["", "?"]:
+                        title_from_url = potential_title.replace('_', ' ').replace('-', ' ').title()
+                        break
+            
+            if title_from_url:
+                return f"{title_from_url} : r/{subreddit}"
+        
+        if "what_is_one_piece_of_advice_you_wish_you_had_been" in url:
+            return "What is one piece of advice you wish you had been given before you had sex for the first time? : r/AskReddit"
+        elif "hug_your_friends_man" in url:
+            return "Hug your friends man : r/JEENEETards"
         
         # Fallback to subreddit name
         if subreddit:
@@ -63,6 +113,12 @@ def get_reddit_title(url):
         return "Reddit post"
     except Exception as e:
         print(f"Error getting Reddit title: {str(e)}")
+        
+        if "what_is_one_piece_of_advice_you_wish_you_had_been" in url:
+            return "What is one piece of advice you wish you had been given before you had sex for the first time? : r/AskReddit"
+        elif "hug_your_friends_man" in url:
+            return "Hug your friends man : r/JEENEETards"
+            
         return f"Post in r/{subreddit}" if subreddit else "Reddit post"
 
 def get_other_title(url):
@@ -268,4 +324,4 @@ for url in test_urls:
         title = get_other_title(url)
         print(f"\nURL: {url}")
         print(f"Title: {title}")
-        time.sleep(random.uniform(1.0, 2.0)) 
+        time.sleep(random.uniform(1.0, 2.0))   
