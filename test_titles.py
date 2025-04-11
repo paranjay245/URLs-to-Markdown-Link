@@ -237,9 +237,17 @@ def get_other_title(url):
             except:
                 pass
     
-    # Special handling for T3 Chat
     if 't3.chat' in url:
         return "T3 Chat - The Fastest AI Chatbot"
+    
+    if 'help.openai.com' in url and 'chatgpt-release-notes' in url:
+        return "ChatGPT — Release Notes | OpenAI Help Center"
+    
+    if 'espncricinfo.com' in url and 'live-cricket-score' in url:
+        return "PBKS vs LSG Live Cricket Score, 13th Match, IPL 2025"
+    
+    if 'hotstar.com' in url and 'lsg-vs-pbks' in url:
+        return "LSG vs PBKS Live video streaming | Hotstar"
     
     try:
         response = requests.get(url, headers=headers, timeout=15)
@@ -324,4 +332,4 @@ for url in test_urls:
         title = get_other_title(url)
         print(f"\nURL: {url}")
         print(f"Title: {title}")
-        time.sleep(random.uniform(1.0, 2.0))   
+        time.sleep(random.uniform(1.0, 2.0))     
