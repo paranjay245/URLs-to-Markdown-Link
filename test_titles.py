@@ -53,6 +53,16 @@ def get_other_title(url):
     headers = {
         'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/121.0.0.0 Safari/537.36'
     }
+    
+    if 'twitter.com' in url or 'x.com' in url:
+        try:
+            username_match = re.search(r'(?:twitter\.com|x\.com)/([^/\?]+)', url)
+            if username_match:
+                username = username_match.group(1)
+                return f"{username} (@{username}) / X"
+        except Exception as e:
+            return "X profile"
+    
     try:
         response = requests.get(url, headers=headers, timeout=10)
         response.encoding = 'utf-8'  # Force UTF-8 encoding
@@ -68,6 +78,11 @@ def get_other_title(url):
             # Special handling for T3 Chat
             elif 't3.chat' in url:
                 title = "T3 Chat - The Fastest AI Chatbot"
+            elif ('twitter.com' in url or 'x.com' in url) and '@' in title:
+                username_match = re.search(r'@([^\s\)]+)', title)
+                username = username_match.group(1) if username_match else ""
+                display_name = title.split('(')[0].strip() if '(' in title else title.split('@')[0].strip()
+                return f"{display_name} (@{username}) / X"
             return title
         
         # Try regular title tag
@@ -81,6 +96,11 @@ def get_other_title(url):
                 # Special handling for T3 Chat
                 elif 't3.chat' in url:
                     title = "T3 Chat - The Fastest AI Chatbot"
+                elif ('twitter.com' in url or 'x.com' in url) and '@' in title:
+                    username_match = re.search(r'@([^\s\)]+)', title)
+                    username = username_match.group(1) if username_match else ""
+                    display_name = title.split('(')[0].strip() if '(' in title else title.split('@')[0].strip()
+                    return f"{display_name} (@{username}) / X"
                 return title
         
         # Try h1 tag
@@ -93,6 +113,11 @@ def get_other_title(url):
             # Special handling for T3 Chat
             elif 't3.chat' in url:
                 title = "T3 Chat - The Fastest AI Chatbot"
+            elif ('twitter.com' in url or 'x.com' in url) and '@' in title:
+                username_match = re.search(r'@([^\s\)]+)', title)
+                username = username_match.group(1) if username_match else ""
+                display_name = title.split('(')[0].strip() if '(' in title else title.split('@')[0].strip()
+                return f"{display_name} (@{username}) / X"
             return title
         
         # Fallback to domain name
@@ -122,4 +147,4 @@ for url in test_urls:
     if 'reddit.com' not in url:
         title = get_other_title(url)
         print(f"\nURL: {url}")
-        print(f"Title: {title}") 
+        print(f"Title: {title}")  
