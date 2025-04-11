@@ -27,8 +27,7 @@ headers = {
 }
 
 def extract_urls(text):
-    # URL pattern that matches both Reddit and other URLs
-    url_pattern = r'https?://(?:www\.)?(?:reddit\.com|apps\.apple\.com|t3\.chat)[^\s<>"]+|https?://[^\s<>"]+'
+    url_pattern = r'https?://(?:www\.)?(?:reddit\.com|twitter\.com|x\.com|apps\.apple\.com|t3\.chat)[^\s<>"]+|https?://[^\s<>"]+'
     return re.findall(url_pattern, text)
 
 @app.route('/')
@@ -70,4 +69,4 @@ if __name__ == '__main__':
         app.run(host='0.0.0.0', port=5002, debug=True)
     except Exception as e:
         logger.error(f"Error starting server: {str(e)}")
-        raise 
+        raise  
